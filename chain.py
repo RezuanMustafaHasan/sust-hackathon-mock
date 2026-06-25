@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 from typing import Literal
 
 from dotenv import load_dotenv
@@ -8,7 +9,7 @@ from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
 
-load_dotenv()
+load_dotenv(Path(__file__).with_name(".env"), override=True)
 
 
 CaseType = Literal[
@@ -45,16 +46,8 @@ class TicketClassification(BaseModel):
     human_review_required: bool
     confidence: float = Field(ge=0, le=1)
 
-
-llm = (
-    ChatOpenAI(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        temperature=0,
-    )
-    if os.getenv("OPENAI_API_KEY")
-    else None
-)
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+llm = ChatOpenAI(model="gpt-4o", api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 structured_llm = (
     llm.with_structured_output(TicketClassification, method="json_schema")
     if llm
